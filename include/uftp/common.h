@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -18,6 +22,8 @@ typedef SOCKET uftp_socket_t;
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 typedef int uftp_socket_t;
 #define UFTP_INVALID_SOCKET (-1)
 #define UFTP_SOCKET_ERROR (-1)
@@ -29,5 +35,8 @@ typedef int uftp_socket_t;
 #define UFTP_MAGIC_3 'P'
 #define UFTP_VERSION 1
 #define UFTP_MSS_MAX 1400
+
+uint64_t uftp_now_ms(void);
+void uftp_log(const char *fmt, ...);
 
 #endif
