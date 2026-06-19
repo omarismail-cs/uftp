@@ -4,7 +4,19 @@ project(uftp C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_executable(uftp src/main.c)
+set(UFTP_SOURCES
+    src/common.c
+    src/codec.c
+    src/net.c
+    src/window.c
+    src/fileio.c
+    src/stats.c
+    src/sender.c
+    src/receiver.c
+    src/main.c
+)
+
+add_executable(uftp ${UFTP_SOURCES})
 target_include_directories(uftp PRIVATE include)
 
 if(WIN32)

@@ -34,7 +34,15 @@ typedef int uftp_socket_t;
 #define UFTP_MAGIC_2 'T'
 #define UFTP_MAGIC_3 'P'
 #define UFTP_VERSION 1
+
+#define UFTP_WINDOW_MAX 64
+#define UFTP_SACK_BITS 64
 #define UFTP_MSS_MAX 1400
+#define UFTP_MAX_FILENAME 256
+
+#define UFTP_INITIAL_RTO_MS 100
+#define UFTP_MAX_RTO_MS 2000
+#define UFTP_MAX_RETRIES 20
 
 uint64_t uftp_now_ms(void);
 void uftp_log(const char *fmt, ...);

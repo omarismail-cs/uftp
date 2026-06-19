@@ -37,6 +37,10 @@ int uftp_sock_open(uftp_sock_t *sock, uint16_t port) {
     int yes = 1;
     setsockopt(sock->fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof(yes));
 
+    int buf = 4 * 1024 * 1024;
+    setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, (const char *)&buf, sizeof(buf));
+    setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, (const char *)&buf, sizeof(buf));
+
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -100,6 +104,7 @@ int uftp_sock_send(uftp_sock_t *sock, const void *data, size_t len) {
 
 int uftp_sock_recv(uftp_sock_t *sock, void *buf, size_t cap, int timeout_ms,
                    struct sockaddr_in *from) {
+    /* Poll recvfrom in a loop; avoid select() on non-blocking UDP (broken on Windows). */
     uint64_t deadline = uftp_now_ms() + (uint64_t)timeout_ms;
 
     for (;;) {
