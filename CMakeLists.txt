@@ -11,6 +11,7 @@ set(UFTP_SOURCES
     src/window.c
     src/fileio.c
     src/stats.c
+    src/ui.c
     src/sender.c
     src/receiver.c
     src/main.c

@@ -2,6 +2,7 @@
 #include "uftp/codec.h"
 #include "uftp/window.h"
 #include "uftp/fileio.h"
+#include "uftp/ui.h"
 #include "uftp/net.h"
 
 #include <stdio.h>
@@ -31,6 +32,7 @@ int uftp_receiver_run(uint16_t port, const char *outpath) {
     uftp_sock_t sock;
     uftp_recv_window_t win;
     uftp_stats_t stats;
+    uftp_ui_t ui;
     uftp_file_t file;
     uint8_t rxbuf[UFTP_MAX_PACKET];
     uint8_t chunk[UFTP_MSS_MAX];
@@ -40,18 +42,22 @@ int uftp_receiver_run(uint16_t port, const char *outpath) {
     int fin_received = 0;
     uint64_t last_ack_ms = 0;
 
+    uftp_ui_init(&ui, 1, "recv");
+
     if (uftp_net_init() != 0) {
+        uftp_ui_shutdown(&ui);
         return 1;
     }
     if (uftp_sock_open(&sock, port) != 0) {
         uftp_net_cleanup();
+        uftp_ui_shutdown(&ui);
         return 1;
     }
 
     uftp_stats_init(&stats);
     uftp_recv_win_init(&win, UFTP_WINDOW_MAX);
     memset(&file, 0, sizeof(file));
-    uftp_log("listening on UDP port %u", port);
+    uftp_ui_log(&ui, "listening on UDP port %u", port);
 
     while (!fin_received) {
         int n = uftp_sock_recv(&sock, rxbuf, sizeof(rxbuf), 50, NULL);
@@ -83,8 +89,8 @@ int uftp_receiver_run(uint16_t port, const char *outpath) {
                 uftp_packet_encode(&hello_ack, &len);
                 uftp_sock_send(&sock, &hello_ack, len);
 
-                uftp_log("incoming %u bytes (%u pkts) -> %s",
-                         msg.hdr.total_size, total_seqs, outpath);
+                uftp_ui_log(&ui, "incoming %u bytes (%u pkts) -> %s",
+                            msg.hdr.total_size, total_seqs, outpath);
                 break;
 
             case UFTP_MSG_DATA:
@@ -108,6 +114,11 @@ int uftp_receiver_run(uint16_t port, const char *outpath) {
                 }
                 send_ack(&sock, session_id, &win, &stats);
                 last_ack_ms = now;
+
+                if (uftp_ui_should_draw(&ui, UFTP_UI_REFRESH_MS)) {
+                    uftp_ui_draw_receiver(&ui, &stats, &win, total_seqs,
+                                          file.offset, session_id, port);
+                }
                 break;
 
             case UFTP_MSG_FIN:
@@ -124,15 +135,22 @@ int uftp_receiver_run(uint16_t port, const char *outpath) {
             default:
                 break;
             }
-        } else if (active && now - last_ack_ms >= 100) {
+        } else if (active) {
+            if (uftp_ui_should_draw(&ui, UFTP_UI_REFRESH_MS)) {
+                uftp_ui_draw_receiver(&ui, &stats, &win, total_seqs, file.offset,
+                                      session_id, port);
+            }
+            if (now - last_ack_ms >= 100) {
             send_ack(&sock, session_id, &win, &stats);
             last_ack_ms = now;
         }
     }
 
     if (active) {
-        uftp_log("complete: %s (%llu bytes)", outpath, (unsigned long long)file.offset);
+        uftp_ui_log(&ui, "complete: %s (%llu bytes)", outpath,
+                    (unsigned long long)file.offset);
     }
+    uftp_ui_shutdown(&ui);
     uftp_stats_print(&stats);
     uftp_file_close(&file);
     uftp_sock_close(&sock);

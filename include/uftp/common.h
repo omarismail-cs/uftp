@@ -44,6 +44,8 @@ typedef int uftp_socket_t;
 #define UFTP_MAX_RTO_MS 2000
 #define UFTP_MAX_RETRIES 20
 
+#define UFTP_UI_REFRESH_MS 33
+
 uint64_t uftp_now_ms(void);
 void uftp_log(const char *fmt, ...);
 

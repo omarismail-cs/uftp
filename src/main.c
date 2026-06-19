@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Sender/receiver use the live UI dashboard by default. */
+
 static void usage(const char *prog) {
     fprintf(stderr,
             "Usage:\n"

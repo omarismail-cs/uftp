@@ -2,6 +2,7 @@
 #include "uftp/codec.h"
 #include "uftp/window.h"
 #include "uftp/fileio.h"
+#include "uftp/ui.h"
 #include "uftp/net.h"
 
 #include <stdio.h>
@@ -41,7 +42,7 @@ static void process_ack(uftp_send_window_t *win, const uftp_packet_t *ack,
 }
 
 static int handshake(uftp_sock_t *sock, uftp_file_t *file, uint32_t session_id,
-                     uftp_stats_t *stats) {
+                     uftp_stats_t *stats, uftp_ui_t *ui) {
     uftp_packet_t pkt;
     uint8_t rxbuf[UFTP_MAX_PACKET];
 
@@ -63,11 +64,11 @@ static int handshake(uftp_sock_t *sock, uftp_file_t *file, uint32_t session_id,
         }
         if (resp.hdr.type == UFTP_MSG_HELLO_ACK &&
             resp.hdr.session_id == session_id) {
-            uftp_log("handshake ok, %llu bytes", (unsigned long long)file->size);
+            uftp_ui_log(ui, "handshake ok, %llu bytes", (unsigned long long)file->size);
             return 0;
         }
     }
-    uftp_log("handshake failed");
+    uftp_ui_log(ui, "handshake failed");
     return -1;
 }
 
@@ -76,6 +77,7 @@ int uftp_sender_run(const char *host, uint16_t port, const char *filepath) {
     uftp_file_t file;
     uftp_send_window_t win;
     uftp_stats_t stats;
+    uftp_ui_t ui;
     uftp_packet_t pkt;
     uint8_t rxbuf[UFTP_MAX_PACKET];
     uint32_t session_id = (uint32_t)uftp_now_ms();
@@ -83,13 +85,17 @@ int uftp_sender_run(const char *host, uint16_t port, const char *filepath) {
     int eof = 0;
     uint64_t rto_ms = UFTP_INITIAL_RTO_MS;
 
+    uftp_ui_init(&ui, 1, "send");
+
     if (uftp_net_init() != 0) {
+        uftp_ui_shutdown(&ui);
         return 1;
     }
     if (uftp_sock_open(&sock, 0) != 0 ||
         uftp_sock_set_peer(&sock, host, port) != 0 ||
         uftp_file_open_read(&file, filepath) != 0) {
         uftp_net_cleanup();
+        uftp_ui_shutdown(&ui);
         return 1;
     }
 
@@ -97,11 +103,12 @@ int uftp_sender_run(const char *host, uint16_t port, const char *filepath) {
     uftp_send_win_init(&win, UFTP_WINDOW_MAX);
     total_seqs = (uint32_t)((file.size + UFTP_MSS_MAX - 1) / UFTP_MSS_MAX);
 
-    uftp_log("connecting to %s:%u", host, port);
-    if (handshake(&sock, &file, session_id, &stats) != 0) {
+    uftp_ui_log(&ui, "connecting to %s:%u", host, port);
+    if (handshake(&sock, &file, session_id, &stats, &ui) != 0) {
         uftp_file_close(&file);
         uftp_sock_close(&sock);
         uftp_net_cleanup();
+        uftp_ui_shutdown(&ui);
         return 1;
     }
 
@@ -160,10 +167,11 @@ int uftp_sender_run(const char *host, uint16_t port, const char *filepath) {
             }
             if (now - slot->sent_at_ms >= rto_ms) {
                 if (slot->retries >= UFTP_MAX_RETRIES) {
-                    uftp_log("max retries exceeded for seq %u", seq);
+                    uftp_ui_log(&ui, "max retries exceeded for seq %u", seq);
                     uftp_file_close(&file);
                     uftp_sock_close(&sock);
                     uftp_net_cleanup();
+                    uftp_ui_shutdown(&ui);
                     return 1;
                 }
                 slot->retries++;
@@ -174,12 +182,17 @@ int uftp_sender_run(const char *host, uint16_t port, const char *filepath) {
                 pkt.hdr.payload_len = slot->len;
                 memcpy(pkt.payload, slot->data, slot->len);
                 send_packet(&sock, &pkt, &stats, 1);
-                uftp_log("retransmit seq %u", seq);
+                uftp_ui_log(&ui, "retransmit seq %u", seq);
             }
+        }
+
+        if (uftp_ui_should_draw(&ui, UFTP_UI_REFRESH_MS)) {
+            uftp_ui_draw_sender(&ui, &stats, &win, total_seqs, file.size, session_id);
         }
     }
 
-    uftp_log("transfer complete");
+    uftp_ui_log(&ui, "transfer complete");
+    uftp_ui_shutdown(&ui);
     uftp_stats_print(&stats);
     uftp_file_close(&file);
     uftp_sock_close(&sock);
