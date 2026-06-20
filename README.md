@@ -42,14 +42,10 @@ Both sides print transfer stats when finished. Look for `verify: OK` on the rece
 
 For a transfer between two machines, use the receiver's LAN IP instead of `127.0.0.1`. The UDP port must be open in the firewall.
 
-## Requirements
+<details id="build">
+<summary><strong>Build</strong></summary>
 
-- C11 compiler (GCC, Clang, or MSVC)
-- CMake 3.16+
-- On Windows: Winsock (linked automatically)
-- Optional: ncurses for an alternate terminal UI backend
-
-## Build
+**Requirements:** C11 compiler (GCC, Clang, or MSVC) · CMake 3.16+ · Winsock on Windows (linked automatically) · optional ncurses for an alternate UI backend
 
 ### CMake (recommended)
 
@@ -69,7 +65,8 @@ Output: `build/uftp.exe` (Windows) or `build/uftp` (Linux/macOS).
 
 If ncurses is found, CMake enables it automatically. Otherwise the UI uses ANSI escape codes (Windows Terminal, most Linux terminals).
 
-### gcc without CMake
+<details>
+<summary>gcc without CMake</summary>
 
 **Linux**
 
@@ -91,14 +88,16 @@ gcc -std=c11 -Wall -Wextra -Iinclude -o build/uftp.exe `
 
 Add `-DUFTP_HAS_NCURSES` and link `-lncurses` (or `-lncursesw` on Linux) if ncurses is installed.
 
+</details>
+
+</details>
+
 ## Usage
 
 ```text
 uftp [options] send <host> <port> <file>
 uftp [options] recv <port> <output_file>
 ```
-
-### Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
@@ -110,7 +109,8 @@ uftp [options] recv <port> <output_file>
 
 Window and chunk size are negotiated in the HELLO handshake. The receiver adopts whatever the sender announces.
 
-### Examples
+<details>
+<summary><strong>More examples</strong> (tuning, loss simulation)</summary>
 
 Plain output (scripts, CI):
 
@@ -140,7 +140,10 @@ Simulate ACK loss on the sender:
 
 Start with 5–10% loss. Higher rates may require multiple retries or fail if control packets are dropped.
 
-## Terminal UI
+</details>
+
+<details>
+<summary><strong>Terminal UI reference</strong></summary>
 
 Refreshes at roughly 30 fps. See the [demo](#demo) above, or run:
 
@@ -160,7 +163,10 @@ Refreshes at roughly 30 fps. See the [demo](#demo) above, or run:
 
 **Receiver:** `.` empty · `=` next expected · `#` buffered · `_` gap · `+` delivered
 
-## Protocol
+</details>
+
+<details>
+<summary><strong>Protocol</strong></summary>
 
 40-byte header (magic, type, session id, sequence, ack fields, CRC) plus up to 1400 bytes of payload per DATA packet.
 
@@ -174,7 +180,10 @@ Refreshes at roughly 30 fps. See the [demo](#demo) above, or run:
 
 The sender pipelines up to 64 packets (tunable with `-w`). Missing ACKs trigger per-packet retransmit with exponential backoff.
 
-## Benchmarks
+</details>
+
+<details>
+<summary><strong>Benchmarks</strong></summary>
 
 Sample loopback results on Windows (16 MB file, `127.0.0.1`, no packet loss):
 
@@ -203,14 +212,20 @@ To benchmark on a LAN, run sender and receiver on separate machines and compare 
 ./build/uftp --no-ui send <machine-a-ip> 9000 testfile.bin
 ```
 
-## Limitations
+</details>
+
+<details>
+<summary><strong>Limitations</strong></summary>
 
 - No resume after interruption
 - No authentication or encryption
 - CRC32 detects accidental corruption, not tampering
 - Sequence numbers are `uint32_t` without explicit wrap handling for very large files
 
-## Project layout
+</details>
+
+<details>
+<summary><strong>Project layout</strong></summary>
 
 ```
 include/uftp/   Public headers (protocol, window, sockets, UI)
@@ -229,10 +244,15 @@ CMakeLists.txt
 | `ui.c` | Live terminal dashboard |
 | `opts.c` / `main.c` | CLI parsing and entry point |
 
-## Roadmap
+</details>
+
+<details>
+<summary><strong>Roadmap</strong></summary>
 
 - [x] Terminal UI for packet flight and buffer state
 - [x] Whole-file CRC32 verification
 - [x] CLI flags for window size and chunk size
 - [x] Loopback benchmarks
 - [ ] Resume support
+
+</details>
