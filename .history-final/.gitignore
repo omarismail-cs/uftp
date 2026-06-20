@@ -1,0 +1,9 @@
+build/
+*.o
+*.obj
+*.exe
+/uftp
+CMakeCache.txt
+CMakeFiles/
+HOW_IT_WORKS.md
+RESUME_NOTES.md

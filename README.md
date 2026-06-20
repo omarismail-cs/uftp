@@ -6,6 +6,14 @@ Built for local networks. Works on Windows and Linux.
 
 This is a learning and demo project — not a replacement for scp, rsync, or SMB in production.
 
+## Demo
+
+<p align="center">
+  <img src="docs/uftp-demo.gif" alt="uftp live transfer — receiver and sender terminal UI side by side" width="720">
+</p>
+
+<p align="center"><sub>Loopback transfer with the live dashboard: send window, receive buffer, throughput sparklines, and event log.</sub></p>
+
 ## Features
 
 - **Selective-repeat sliding window** — numbered chunks, reorder buffer, cumulative + selective ACKs, timeout retransmits
@@ -14,16 +22,9 @@ This is a learning and demo project — not a replacement for scp, rsync, or SMB
 - **Tunable transfer** — `-w` / `--window` and `-m` / `--mss` on the sender
 - **Loss simulation** — `--drop` randomly discards incoming packets for testing recovery
 
-Resume and encryption are not implemented.
-
 ## Quick start
 
-**1. Build**
-
-```bash
-cmake -B build
-cmake --build build
-```
+**1.** Build the project (see [Build](#build) below).
 
 **2. Receiver** (terminal 1)
 
@@ -141,7 +142,12 @@ Start with 5–10% loss. Higher rates may require multiple retries or fail if co
 
 ## Terminal UI
 
-Refreshes at roughly 30 fps.
+Refreshes at roughly 30 fps. See the [demo](#demo) above, or run:
+
+```bash
+./build/uftp recv 9000 received.bin
+./build/uftp -w 16 -m 512 send 127.0.0.1 9000 myfile.bin
+```
 
 | Panel | Contents |
 |-------|----------|
@@ -203,13 +209,13 @@ To benchmark on a LAN, run sender and receiver on separate machines and compare 
 - No authentication or encryption
 - CRC32 detects accidental corruption, not tampering
 - Sequence numbers are `uint32_t` without explicit wrap handling for very large files
-- Tested primarily on loopback; real-network testing is left to the user
 
 ## Project layout
 
 ```
 include/uftp/   Public headers (protocol, window, sockets, UI)
 src/            Implementation
+docs/           README assets (demo GIF)
 scripts/        Benchmark helpers
 CMakeLists.txt
 ```
