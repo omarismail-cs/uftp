@@ -5,4 +5,13 @@
 /uftp
 CMakeCache.txt
 CMakeFiles/
+HOW_IT_WORKS.md
 RESUME_NOTES.md
+
+# Local test transfer files
+*.bin
+
+# Git history rebuild tooling (local only)
+.history-final/
+.history-snapshots/
+scripts/rebuild-history.ps1
