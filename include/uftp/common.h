@@ -38,15 +38,21 @@ typedef int uftp_socket_t;
 #define UFTP_WINDOW_MAX 64
 #define UFTP_SACK_BITS 64
 #define UFTP_MSS_MAX 1400
+#define UFTP_MSS_MIN 512
+#define UFTP_WINDOW_MIN 1
 #define UFTP_MAX_FILENAME 256
 
 #define UFTP_INITIAL_RTO_MS 100
 #define UFTP_MAX_RTO_MS 2000
 #define UFTP_MAX_RETRIES 20
 
-#define UFTP_UI_REFRESH_MS 33
+#define UFTP_CRC32_INIT 0xFFFFFFFFu
 
 uint64_t uftp_now_ms(void);
+uint32_t uftp_crc32(const void *data, size_t len);
+uint32_t uftp_crc32_update(uint32_t crc, const void *data, size_t len);
+uint32_t uftp_crc32_final(uint32_t crc);
+uint32_t uftp_file_crc32(const char *path);
 void uftp_log(const char *fmt, ...);
 
 #endif

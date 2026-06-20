@@ -4,13 +4,13 @@
 #include "common.h"
 
 typedef enum {
-    UFTP_MSG_HELLO     = 1,
+    UFTP_MSG_HELLO    = 1,
     UFTP_MSG_HELLO_ACK = 2,
-    UFTP_MSG_DATA      = 3,
-    UFTP_MSG_ACK       = 4,
-    UFTP_MSG_NACK      = 5,
-    UFTP_MSG_FIN       = 6,
-    UFTP_MSG_FIN_ACK   = 7,
+    UFTP_MSG_DATA     = 3,
+    UFTP_MSG_ACK      = 4,
+    UFTP_MSG_NACK     = 5,
+    UFTP_MSG_FIN      = 6,
+    UFTP_MSG_FIN_ACK  = 7,
 } uftp_msg_type;
 
 typedef struct {
@@ -30,6 +30,13 @@ typedef struct {
 
 #define UFTP_HDR_SIZE ((uint16_t)sizeof(uftp_hdr_t))
 #define UFTP_MAX_PACKET (UFTP_HDR_SIZE + UFTP_MSS_MAX)
+
+/* HELLO: window = send window; seq = MSS (chunk payload size).
+ * HELLO/FIN: cum_ack carries expected file CRC32 when UFTP_FLAG_FILE_CRC is set.
+ * FIN_ACK: cum_ack is 0 on match, 1 on mismatch. */
+#define UFTP_FLAG_FILE_CRC 0x0001
+#define UFTP_FIN_ACK_OK    0u
+#define UFTP_FIN_ACK_FAIL  1u
 
 typedef struct {
     uftp_hdr_t hdr;

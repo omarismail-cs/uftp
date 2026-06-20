@@ -13,6 +13,8 @@ typedef struct {
     uint64_t acks_sent;
     uint64_t gaps_detected;
     uint64_t start_ms;
+    uint32_t file_crc;
+    int crc_ok;
 } uftp_stats_t;
 
 void uftp_stats_init(uftp_stats_t *s);

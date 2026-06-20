@@ -1,5 +1,9 @@
 #include "uftp/net.h"
 
+static int g_drop_pct = 0;
+static uint64_t g_drop_count = 0;
+static uint64_t g_recv_count = 0;
+
 int uftp_net_init(void) {
 #ifdef _WIN32
     WSADATA wsa;
@@ -15,6 +19,42 @@ void uftp_net_cleanup(void) {
 #ifdef _WIN32
     WSACleanup();
 #endif
+}
+
+void uftp_net_set_drop_pct(int pct) {
+    if (pct < 0) {
+        pct = 0;
+    }
+    if (pct > 100) {
+        pct = 100;
+    }
+    g_drop_pct = pct;
+    g_drop_count = 0;
+    g_recv_count = 0;
+    if (pct > 0) {
+        srand((unsigned)uftp_now_ms() ^ 0x9e3779b9u);
+    }
+}
+
+void uftp_net_get_drop_stats(uint64_t *dropped, uint64_t *seen) {
+    if (dropped) {
+        *dropped = g_drop_count;
+    }
+    if (seen) {
+        *seen = g_recv_count;
+    }
+}
+
+static int net_should_drop(void) {
+    if (g_drop_pct <= 0) {
+        return 0;
+    }
+    g_recv_count++;
+    if ((rand() % 100) < g_drop_pct) {
+        g_drop_count++;
+        return 1;
+    }
+    return 0;
 }
 
 static int net_would_block(void) {
@@ -104,7 +144,6 @@ int uftp_sock_send(uftp_sock_t *sock, const void *data, size_t len) {
 
 int uftp_sock_recv(uftp_sock_t *sock, void *buf, size_t cap, int timeout_ms,
                    struct sockaddr_in *from) {
-    /* Poll recvfrom in a loop; avoid select() on non-blocking UDP (broken on Windows). */
     uint64_t deadline = uftp_now_ms() + (uint64_t)timeout_ms;
 
     for (;;) {
@@ -114,6 +153,9 @@ int uftp_sock_recv(uftp_sock_t *sock, void *buf, size_t cap, int timeout_ms,
                               (struct sockaddr *)&src, &slen);
 
         if (n >= 0) {
+            if (net_should_drop()) {
+                continue;
+            }
             if (from) {
                 *from = src;
             }

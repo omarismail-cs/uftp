@@ -1,7 +1,7 @@
 #ifndef UFTP_NET_H
 #define UFTP_NET_H
 
-#include "common.h"
+#include "protocol.h"
 
 typedef struct {
     uftp_socket_t fd;
@@ -11,6 +11,8 @@ typedef struct {
 
 int uftp_net_init(void);
 void uftp_net_cleanup(void);
+void uftp_net_set_drop_pct(int pct);
+void uftp_net_get_drop_stats(uint64_t *dropped, uint64_t *seen);
 int uftp_sock_open(uftp_sock_t *sock, uint16_t port);
 void uftp_sock_close(uftp_sock_t *sock);
 int uftp_sock_set_peer(uftp_sock_t *sock, const char *host, uint16_t port);
