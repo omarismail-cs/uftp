@@ -64,16 +64,6 @@ void uftp_send_win_advance(uftp_send_window_t *w) {
     }
 }
 
-uftp_send_slot_t *uftp_send_win_oldest_unacked(uftp_send_window_t *w) {
-    for (uint32_t seq = w->send_base; seq < w->send_next; seq++) {
-        uftp_send_slot_t *slot = &w->slots[slot_index(seq, w->window)];
-        if (slot->valid && slot->seq == seq) {
-            return slot;
-        }
-    }
-    return NULL;
-}
-
 int uftp_recv_win_store(uftp_recv_window_t *w, uint32_t seq,
                         const uint8_t *data, uint16_t len) {
     if (!seq_in_window(w->recv_base, seq, w->window)) {

@@ -40,7 +40,6 @@ int uftp_send_win_in_flight(const uftp_send_window_t *w);
 uftp_send_slot_t *uftp_send_win_slot(uftp_send_window_t *w, uint32_t seq);
 int uftp_send_win_mark_acked(uftp_send_window_t *w, uint32_t seq);
 void uftp_send_win_advance(uftp_send_window_t *w);
-uftp_send_slot_t *uftp_send_win_oldest_unacked(uftp_send_window_t *w);
 
 int uftp_recv_win_store(uftp_recv_window_t *w, uint32_t seq,
                         const uint8_t *data, uint16_t len);

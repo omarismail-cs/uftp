@@ -8,7 +8,6 @@ typedef enum {
     UFTP_MSG_HELLO_ACK = 2,
     UFTP_MSG_DATA     = 3,
     UFTP_MSG_ACK      = 4,
-    UFTP_MSG_NACK     = 5,
     UFTP_MSG_FIN      = 6,
     UFTP_MSG_FIN_ACK  = 7,
 } uftp_msg_type;

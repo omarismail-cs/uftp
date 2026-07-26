@@ -5,8 +5,8 @@
 /uftp
 CMakeCache.txt
 CMakeFiles/
-HOW_IT_WORKS.md
 RESUME_NOTES.md
+PROJECT_REFERENCE.md
 
 # Local test transfer files
 *.bin
